@@ -9,6 +9,18 @@ import App from '../App';
 // Note: test renderer must be required after react-native.
 import renderer from 'react-test-renderer';
 
-it('renders correctly', () => {
-  renderer.create(<App />);
+import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
+
+global.fetch = jest.fn(() => new Promise(resolve => resolve()));
+jest.mock('react-native-gesture-handler', () => {});
+jest.mock('@react-native-community/netinfo', () => {});
+
+
+jest.useFakeTimers()
+
+it('renders correctly', async  () => {
+  const tree = renderer
+  .create(<App />)
+  .toJSON();
+expect(tree).toMatchSnapshot();
 });

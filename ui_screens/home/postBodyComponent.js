@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableWithoutFeedback, Dimensions, StatusBar, Animated, TouchableOpacity, Share, Image, Linking, UIManager } from 'react-native';
+import { View, Text, StyleSheet, TouchableWithoutFeedback, Dimensions, StatusBar, Animated, TouchableOpacity, Share, Image, Linking, UIManager, Platform } from 'react-native';
 import moment from 'moment';
 import { Icon, Tooltip } from '@ui-kitten/components';
 
@@ -60,7 +60,7 @@ export const Post = ({ data, index, selectedCardIndex, selectedView, handleSelec
             {
                 toValue: selectedCI == index ? 1 : 0,
                 duration: 500,
-                useNativeDriver: true
+                useNativeDriver: false
             }).start();
         Animated.timing(
             rotateCard,

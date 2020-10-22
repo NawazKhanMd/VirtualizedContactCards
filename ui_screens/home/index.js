@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, TouchableWithoutFeedback, VirtualizedList, View, Text, InteractionManager, UIManager, LayoutAnimation, TextInput, ImageBackground } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, VirtualizedList, View, Text, InteractionManager, UIManager, LayoutAnimation, TextInput, ImageBackground, Platform } from 'react-native';
 import NetInfo from "@react-native-community/netinfo";
 
 import { get } from './utils/fetch';                                     // Re-usable Function to get DATA from Restful API's
@@ -33,8 +33,6 @@ export default function Home({ }) {
       checkInternetAndCall(state.isInternetReachable)
     });
   }, []);
-
-
   const checkInternetAndCall = (flag) => {                               // Handles whether to call the API or display Error componet
     if (flag) {
       setOfflineFlag(false)

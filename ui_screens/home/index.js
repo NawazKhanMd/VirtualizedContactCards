@@ -1,29 +1,33 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, TouchableWithoutFeedback, Dimensions, VirtualizedList, View, Text, InteractionManager, UIManager, LayoutAnimation, TextInput, ImageBackground } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, VirtualizedList, View, Text, InteractionManager, UIManager, LayoutAnimation, TextInput, ImageBackground } from 'react-native';
 import NetInfo from "@react-native-community/netinfo";
-import { get } from './utils/fetch';
-import { Post } from './postBodyComponent';
-import { Icon } from '@ui-kitten/components';
-import { Error } from './error';
-const api = 'https://randomuser.me/api/?results=20'
+
+import { get } from './utils/fetch';                                     // Re-usable Function to get DATA from Restful API's
+import { Post } from './postBodyComponent';                              // Each Card Component
+import { Error } from './error';                                         // Error Component Handles UI on Internet or Bad Response
+
+import { Icon } from '@ui-kitten/components';                            // 3rd party UI Component for Icons.   
+
+
+const api = 'https://randomuser.me/api/?results=20'                      // API url
 
 export default function Home({ }) {
+
   if (
     Platform.OS === "android" &&
     UIManager.setLayoutAnimationEnabledExperimental
   ) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
   }
-  const [searchKey, setSearchKey] = React.useState('');
-  const [originalPosts, setOriginalPosts] = React.useState([]);
-  const [arrayOfPosts, setPostsData] = React.useState([]);              // Array of posts
-  const [totalPages, setTotalPages] = React.useState(0);                 // Total number of pages in the api
-  const [currentPage, setCurrentPage] = React.useState(0);               // Current pagianted page for api calling
+
+  const [searchKey, setSearchKey] = React.useState('');                  // Search Key Value
+  const [originalPosts, setOriginalPosts] = React.useState([]);          // Array of Cards which is used in the case of Search
+  const [arrayOfPosts, setPostsData] = React.useState([]);               // Array of Contacts
   const [selectedCard, setSelectedIndex] = React.useState(-1);           // Keeping the index of selected card to expand or do the animations
   const [selectedView, setSelectedView] = React.useState(0);             // Toggle between Tab View and List View
   const [isOffline, setOfflineFlag] = React.useState(false);             // If Offline this will be true 
-  const [isLoading, setLoadingFlag] = React.useState(0);                 //This hase 3 states 0 = LoadingHasFinised , 1 = is Loading, 2 = Network error
-  let OriginalPosts = []
+  const [isLoading, setLoadingFlag] = React.useState(0);                 // This hase 3 states 0 = LoadingHasFinised , 1 = is Loading, 2 = Network error
+
   useEffect(() => {
     NetInfo.addEventListener(state => {
       checkInternetAndCall(state.isInternetReachable)
@@ -31,10 +35,10 @@ export default function Home({ }) {
   }, []);
 
 
-  const checkInternetAndCall = (flag) => {
+  const checkInternetAndCall = (flag) => {                               // Handles whether to call the API or display Error componet
     if (flag) {
       setOfflineFlag(false)
-      getPosts(currentPage + 1);
+      getPosts();
     } else {
       if (isOffline == false) {
         setLoadingFlag(0);
@@ -42,8 +46,7 @@ export default function Home({ }) {
       }
     }
   }
-  const getPosts = () => {
-    //setLoadingFlag(0);
+  const getPosts = () => {                                               // Hits API and gets New Contacts that are pushed to the UI
     get({
       url: api,
     })()
@@ -53,10 +56,6 @@ export default function Home({ }) {
           InteractionManager.runAfterInteractions(() => {
             setPostsData(arrayOfPosts.concat(response.data.results));
             setOriginalPosts(arrayOfPosts.concat(response.data.results));
-            // if (totalPages == 0) {
-            //   setTotalPages(response.data.pages);
-            // }
-            // setCurrentPage(id);
           })
         } else {
           setLoadingFlag(2)
@@ -67,7 +66,7 @@ export default function Home({ }) {
         console.log(error)
       });
   }
-  const getItem = (data, index) => {
+  const getItem = (data, index) => {                                     // For Virtualized Cards
     return {
       id: Math.random().toString(12).substring(0),                //Generating Unique ID's
       data: data[index],
@@ -75,14 +74,10 @@ export default function Home({ }) {
       total: data.length                                          //data Object 
     }
   }
-  const handleSelected = (index) => {
-    // LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  const handleSelected = (index) => {                                    // Callback when Clicked on a card
     setSelectedIndex(selectedCard == index ? -1 : index)
   }
-  const handleTabClick = (viewIndex) => {
-    setSelectedView(viewIndex)
-  }
-  const handleSearch = (value) => {
+  const handleSearch = (value) => {                                      // Handles Searching the Contacts                  
     setSearchKey(value)
     setSelectedIndex(-1)
     let temp_list = Array.from(originalPosts);
@@ -101,58 +96,48 @@ export default function Home({ }) {
     //alert(JSON.stringify(temp_list))
     setPostsData(temp_list);
   }
-  const handleSearchClear = () => {
+  const handleSearchClear = () => {                                      // Handles Clearing of Searched items
     setSearchKey('');
     setLoadingFlag(1)
     setSelectedIndex(-1)
     setSelectedView(0)
     setPostsData(Array.from(originalPosts));
   }
-  const Tab = ({ id, name, iconName, selected }) => {
-    return (
-      <TouchableWithoutFeedback onPress={() => handleTabClick(id)}>
-        <View style={selected == id ? styles.selectedTab : styles.tab}>
-          <Icon fill={selected == id ? '#fff' : '#8A56AC'} style={styles.tabIcon} name={iconName} />
-          <Text style={selected == id ? styles.selectedTabText : styles.tabText}>{name}</Text>
-        </View>
-      </TouchableWithoutFeedback>
-    )
-  }
+  const BG_img = require('../../images/bg.gif');                         // Backgroung Image
 
-
-  if (isLoading != 2 && !isOffline) {
+  if (isLoading != 2 && !isOffline) {                                    // This is True when there are no errors and we can shoe the Cards
     return (
-      <ImageBackground source={require('../../images/bg.gif')} style={styles.image}>
+      <ImageBackground source={BG_img} style={styles.image}>
         <View style={styles.inputContainer}>
           <TextInput style={styles.inputTag} value={searchKey} onChangeText={value => handleSearch(value)} />
-          {searchKey != '' &&
+          {searchKey != '' &&                                            // Displayed only when the user Searches
             <TouchableWithoutFeedback onPress={handleSearchClear}>
               <Icon fill='#8A56AC' style={styles.tabIcon} name={'close-square'} />
             </TouchableWithoutFeedback>
           }
         </View>
-        <VirtualizedList
-          data={isLoading == 0 ? Array.from(' '.repeat(20)) : arrayOfPosts}
+        <VirtualizedList                                                 // if the Loading is 0, we are showing empty cards
+          data={isLoading == 0 ? Array.from(' '.repeat(20)) : arrayOfPosts}     // and if Loading is not 0 we are showing actual Cards
           initialNumToRender={4}
-          renderItem={({ item }) => <Post  {...item} selectedView={selectedView} handleSelected={(index) => handleSelected(index)} selectedCardIndex={selectedCard} />}
+          renderItem={({ item }) => <Post {...item} selectedView={selectedView} handleSelected={(index) => handleSelected(index)} selectedCardIndex={selectedCard} />}
           keyExtractor={item => item.id}
           getItemCount={(data) => data.length}
           getItem={getItem}
           onEndReached={() => {
-            if (searchKey == '') {
+            if (searchKey == '') {                                       // this will call the API for the next list of contacts only when the use is not searching
               getPosts()
             }
           }}
           onEndReachedThreshold={0.5}
         />
-        {isLoading == 1 && arrayOfPosts.length == 0 &&
+        {isLoading == 1 && arrayOfPosts.length == 0 &&                   // If the user searched for a name which is not there, this will become true
           <View style={styles.noResutlsContainer}>
             <Text style={[styles.noResultsContent]}>Oops we did not find anyone</Text>
           </View>
         }
       </ImageBackground>
     )
-  } else {
+  } else {                                                               // This will show the Error Component if we encounter a error
     return (
       <Error state={isLoading} />
     )
@@ -160,20 +145,20 @@ export default function Home({ }) {
 }
 
 const styles = StyleSheet.create({
-  noResutlsContainer:{
-    display:'flex',
-    flexDirection:'row',
-    justifyContent:'center'
+  noResutlsContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center'
   },
-  noResultsContent:{
-    color:'white',
-    fontSize:20,
-    fontWeight:'bold',
-    backgroundColor:'#8A56AC',
-    paddingVertical:10,
-    paddingHorizontal:30,
-    borderTopLeftRadius:15,
-    borderTopRightRadius:15,
+  noResultsContent: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    backgroundColor: '#8A56AC',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
   },
   image: {
     flex: 1,

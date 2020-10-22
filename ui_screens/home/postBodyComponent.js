@@ -1,30 +1,32 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableWithoutFeedback, Dimensions, StatusBar, Animated, TouchableOpacity, Share, Image, Linking, LayoutAnimation, UIManager, InteractionManager } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableWithoutFeedback, Dimensions, StatusBar, Animated, TouchableOpacity, Share, Image, Linking, UIManager } from 'react-native';
 import moment from 'moment';
 import { Icon, Tooltip } from '@ui-kitten/components';
 
-const colors = ['#D47FA6', '#8A56AC', '#241332', '#4aaaaa', '#4666E5', '#132641', '#52912E', '#417623', '#253E12']
-const minH = (Dimensions.get('screen').height - StatusBar.currentHeight) / 3 //250   // Min Height of a card once we hide content 
-const spinValue = new Animated.Value(0)
+const colors = ['#D47FA6', '#8A56AC', '#241332', '#4aaaaa', '#4666E5', '#132641', '#52912E', '#417623', '#253E12']   //Background Colors for Contact cards
+const minH = (Dimensions.get('screen').height - StatusBar.currentHeight) / 3    // Min Height of a card once we hide content 
+let prevSelected = -1                                                           // Previous Selected State
 
-let prevSelected = -1
 if (
     Platform.OS === "android" &&
     UIManager.setLayoutAnimationEnabledExperimental
-  ) {
+) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-export const Post = ({ data, index, selectedCardIndex, selectedView,handleSelected }) => {
-    const ExtendBottom = new Animated.Value(-minH / 1.5)  // 
-    const skrinkBottom = new Animated.Value(-15)  // 
+}
 
-    const rotateCard = new Animated.Value(1);
-    const rotateBack = new Animated.Value(1);
-    const animatedValue = new Animated.Value(0);
-    const [likes, updateLikes] = useState(false)
-    const [tootlTipVisible, settootlTipVisible] = React.useState(false);
-    const [selectedCI, setSelectedCI] = useState(selectedCardIndex)
-    const handleShare = (data) => {
+export const Post = ({ data, index, selectedCardIndex, selectedView, handleSelected }) => {
+
+    const ExtendBottom = new Animated.Value(-minH / 1.5)                         // Animated 
+    const skrinkBottom = new Animated.Value(-15)                                 //          Values
+    const rotateCard = new Animated.Value(1);                                    //                To
+    const rotateBack = new Animated.Value(1);                                    //                  Handle
+    const animatedValue = new Animated.Value(0);                                 //                        Sliding
+
+    const [likes, updateLikes] = useState(false);                                // State to hold Fav Card or not this is not in redux/parentState for this is not saved anywhere
+    const [tootlTipVisible, settootlTipVisible] = React.useState(false);         // Tooltip is displayed when user clicks on Share
+    const [selectedCI, setSelectedCI] = useState(selectedCardIndex);             // Selected Card Index to Initiate Animated Slding
+
+    const handleShare = (data) => {                                              // Handles Share Functionality
         settootlTipVisible(true)
         setTimeout(() => {
             settootlTipVisible(false)
@@ -37,7 +39,7 @@ export const Post = ({ data, index, selectedCardIndex, selectedView,handleSelect
             }
         }, 800)
     }
-    const handleDailer = (obj) => {
+    const handleDailer = (obj) => {                                              // Handles Dailing feature
         let phoneNumber = ''
         if (Platform.OS === 'android') {
             phoneNumber = `tel:${obj}`;
@@ -48,12 +50,11 @@ export const Post = ({ data, index, selectedCardIndex, selectedView,handleSelect
 
         Linking.openURL(phoneNumber);
     }
-    const handleMail = (email) => {
+    const handleMail = (email) => {                                              // Handles MailTo Feature
         Linking.openURL('mailto:' + email);
-
     }
 
-    useEffect(() => {
+    useEffect(() => {                                                            // Animating Slide Feature as soon as selected Cardindex Changes
         prevSelected = selectedCI;
         Animated.timing(animatedValue,
             {
@@ -81,7 +82,7 @@ export const Post = ({ data, index, selectedCardIndex, selectedView,handleSelect
             skrinkBottom,
             {
                 useNativeDriver: false,
-                toValue: selectedCI == prevSelected ? -minH / 1.5 : -15,// selectedCI == index ? -minH / 1.5:-15,
+                toValue: selectedCI == prevSelected ? -minH / 1.5 : -15,
                 duration: 500,
             }
         ).start();
@@ -98,46 +99,45 @@ export const Post = ({ data, index, selectedCardIndex, selectedView,handleSelect
     let heightOfTheCard = 0
     let cardRotation = null
     let marginBottomOftheCard = 0
-    if (selectedCI == index && selectedView == 0) {
+
+    if (selectedCI == index && selectedView == 0) {                             // Animating to Straight the card
         heightOfTheCard = 'auto'
         cardRotation = rotateCard.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '-35deg']
         });
         marginBottomOftheCard = ExtendBottom
-    } else if (index == prevSelected && selectedView == 0) {
+    } else if (index == prevSelected && selectedView == 0) {                    // Animating to Rotate the Card as this is the Previously selected card
         heightOfTheCard = minH
         cardRotation = rotateBack.interpolate({
             inputRange: [0, 1],
             outputRange: ['-35deg', '0deg']
         });
         marginBottomOftheCard = skrinkBottom;
-    } else if (selectedView == 0) {
+    } else if (selectedView == 0) {                                             // Animating to display normal list with rotation
         heightOfTheCard = minH
         cardRotation = '-35deg';
         marginBottomOftheCard = -minH / 1.5
-    } else {
+    } else {                                                                    // Animation to Zero Rotaion
         heightOfTheCard = 'auto'
         cardRotation = '0deg';
         marginBottomOftheCard = 0
     }
     return (
-        <TouchableWithoutFeedback onPress={() => {
-            //InteractionManager.runAfterInteractions(() => {
+        <TouchableWithoutFeedback                                               // Updating Selected Card Index when Touched
+            onPress={() => {
                 handleSelected(index)
-            //})
-            setSelectedCI(index)
+                setSelectedCI(index)
             }}>
-
-            <Animated.View style={{
-                ...styles.container, backgroundColor: colors[index % 9],
+            <Animated.View style={{                                            // Animated View reponsible for Rotation
+                ...styles.container,
+                backgroundColor: colors[index % 9],
                 height: heightOfTheCard,
+                marginBottom: marginBottomOftheCard,
                 transform: [{
                     rotateX: cardRotation
                 }],
-                marginBottom: marginBottomOftheCard,
             }}>
-                {/* <Animated.View style={[{width:100,height:100,backgroundColor:'grey', opacity: animatedValue}]}/> */}
                 <View style={{ ...styles.rowContainer }}>
                     <View style={{ ...styles.avatarContainer }}>
                         {data.picture != undefined && <Image style={{ ...styles.avatar }} source={{

@@ -34,5 +34,8 @@ Fourth component is UI Screens/ Home / Error.js
 A Get Method to Access API's and get the Data back to Home/index.js
 
 
+Unit Tests are in _tests_ folder in root location.
+
+
 Thank You.
 
